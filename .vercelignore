@@ -1,0 +1,8 @@
+Resume.csv
+backend/venv/
+frontend/node_modules/
+.venv/
+__pycache__/
+*.pyc
+start_backend.bat
+start_frontend.bat
