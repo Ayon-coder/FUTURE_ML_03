@@ -15,6 +15,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/api/health")
+async def health_check():
+    return {"status": "ok"}
+
 @app.post("/api/screen")
 async def screen_resumes(
     job_description: str = Form(...),
@@ -36,14 +40,13 @@ async def screen_resumes(
         raw_matching = list(set(jd_skills) & set(resume_skills))
         raw_missing = list(set(jd_skills) - set(resume_skills))
         
-        # Remove standalone words if they are already part of a larger matched phrase
-        # e.g., if 'machine learning' is matched, remove 'machine' and 'learning'
+        # Remove standalone words if part of a larger matched phrase
         matching_skills = []
         for match in raw_matching:
             if not any(match != other and match in other.split() for other in raw_matching):
                 matching_skills.append(match)
                 
-        # Remove missing words if they are part of a successfully matched phrase
+        # Remove missing words if part of a successfully matched phrase
         missing_skills = []
         for m in raw_missing:
             if not any(m in match.split() for match in matching_skills):
@@ -54,13 +57,14 @@ async def screen_resumes(
         results.append({
             "filename": filename,
             "similarity_score": round(score * 100, 2),
-            "matching_skills": matching_skills,
-            "missing_skills": missing_skills
+            "matching_skills": sorted(matching_skills),
+            "missing_skills": sorted(missing_skills)
         })
     
     results = sorted(results, key=lambda x: x["similarity_score"], reverse=True)
     return {"results": results}
 
+# For local development
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

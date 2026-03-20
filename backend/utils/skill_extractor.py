@@ -1,45 +1,74 @@
-import spacy
+import re
 
-try:
-    nlp = spacy.load("en_core_web_sm")
-except OSError:
-    pass
-
-# Fallback common tech skills
-COMMON_SKILLS = {
-    "python", "java", "c++", "c#", "javascript", "typescript", "react", "node.js",
-    "fastapi", "html", "css", "sql", "aws", "docker", "kubernetes", "git",
-    "machine learning", "deep learning", "nlp", "tensorflow", "pytorch",
-    "scikit-learn", "pandas", "numpy", "data science", "agile", "linux", "aiml", "artificial intelligence"
+# Comprehensive skill catalog - covers major tech domains
+SKILL_CATALOG = {
+    # Programming Languages
+    "python", "java", "javascript", "typescript", "c++", "c#", "ruby", "go", "golang",
+    "rust", "php", "swift", "kotlin", "scala", "perl", "r", "matlab", "dart", "lua",
+    "objective-c", "shell", "bash", "powershell", "sql", "nosql", "html", "css", "sass",
+    
+    # Frameworks & Libraries
+    "react", "angular", "vue", "next.js", "nextjs", "nuxt", "svelte", "django", "flask",
+    "fastapi", "spring", "express", "node.js", "nodejs", ".net", "dotnet", "rails",
+    "laravel", "bootstrap", "tailwind", "jquery", "redux", "graphql", "rest", "restful",
+    
+    # Data Science & ML
+    "machine learning", "deep learning", "nlp", "natural language processing",
+    "computer vision", "tensorflow", "pytorch", "keras", "scikit-learn", "sklearn",
+    "pandas", "numpy", "scipy", "matplotlib", "seaborn", "opencv", "spacy",
+    "data science", "data analysis", "data engineering", "data mining",
+    "neural network", "regression", "classification", "clustering",
+    "random forest", "xgboost", "lightgbm", "reinforcement learning",
+    "generative ai", "llm", "large language model", "transformer",
+    "bert", "gpt", "prompt engineering", "rag",
+    
+    # AI/ML General
+    "artificial intelligence", "ai", "ml", "aiml", "ai/ml",
+    
+    # Cloud & DevOps
+    "aws", "azure", "gcp", "google cloud", "docker", "kubernetes", "k8s",
+    "terraform", "ansible", "jenkins", "ci/cd", "cicd", "devops", "mlops",
+    "linux", "unix", "nginx", "apache", "serverless", "lambda", "cloudformation",
+    "ec2", "s3", "rds", "dynamodb", "redis", "kafka", "rabbitmq",
+    
+    # Databases
+    "mysql", "postgresql", "postgres", "mongodb", "sqlite", "oracle",
+    "cassandra", "elasticsearch", "firebase", "supabase",
+    
+    # Tools & Practices
+    "git", "github", "gitlab", "bitbucket", "jira", "confluence",
+    "agile", "scrum", "kanban", "tdd", "bdd", "microservices",
+    "api", "sdk", "oauth", "jwt", "websocket",
+    
+    # Specializations
+    "blockchain", "web3", "solidity", "cybersecurity", "penetration testing",
+    "embedded systems", "iot", "robotics", "ar", "vr",
+    "figma", "photoshop", "ui/ux", "ux", "ui", "wireframing",
+    
+    # Soft Skills
+    "leadership", "communication", "teamwork", "problem solving",
+    "critical thinking", "project management", "time management",
 }
 
+def _normalize(text: str) -> str:
+    return re.sub(r'\s+', ' ', text.lower().strip())
+
 def extract_skills(text: str, is_jd: bool = False) -> list:
-    """
-    If is_jd=True, we aggressively extract all proper nouns/noun chunks as 'required skills'.
-    Otherwise, we just extract predefined tech skills and obvious entities to avoid noise.
-    """
-    doc = nlp(text.lower())
-    found_skills = set()
+    normalized = _normalize(text)
+    found = set()
     
-    # 1. Look for known heavy-hitters
-    lower_text = text.lower()
-    for skill in COMMON_SKILLS:
-        if skill in lower_text:
-            found_skills.add(skill)
-            
-    # 2. Add dynamic extraction
-    for chunk in doc.noun_chunks:
-        word = chunk.text.strip().lower()
-        if len(word) > 2 and word not in ["we", "you", "they", "this", "that", "the role", "candidate", "experience", "years", "job", "description"]:
-            # If it's a JD, we assume all technical terms/nouns are required skills 
-            if is_jd or word in COMMON_SKILLS:
-                found_skills.add(word)
-                
-    # If the user literally just typed one word (like "AIML"), ensure we grab it!
+    # 1. Match multi-word skills first (longest match priority)
+    sorted_skills = sorted(SKILL_CATALOG, key=len, reverse=True)
+    for skill in sorted_skills:
+        if skill in normalized:
+            found.add(skill)
+    
+    # 2. If JD is very short (1-3 words), grab each word as a skill
     words = text.split()
-    if len(words) <= 3:
+    if len(words) <= 5:
         for w in words:
-            if len(w) > 2:
-                found_skills.add(w.lower())
-                
-    return list(found_skills)
+            clean = re.sub(r'[^a-zA-Z0-9/#+.]', '', w).lower()
+            if len(clean) >= 2:
+                found.add(clean)
+    
+    return list(found)
