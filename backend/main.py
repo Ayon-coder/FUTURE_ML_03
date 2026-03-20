@@ -1,3 +1,9 @@
+import sys
+import os
+
+# Ensure the backend directory is in Python path (needed for Vercel serverless)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List

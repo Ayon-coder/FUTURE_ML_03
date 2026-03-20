@@ -52,7 +52,7 @@ function App() {
       setResults(data.results);
     } catch (error) {
       console.error('Error uploading files:', error);
-      alert('Error connecting to backend API. Please ensure the backend is running.');
+      alert('Error connecting to backend API. If running locally, ensure the backend is running on port 8000.');
     } finally {
       setLoading(false);
     }
